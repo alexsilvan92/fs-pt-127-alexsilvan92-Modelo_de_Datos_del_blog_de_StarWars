@@ -1,9 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Integer, BigInteger, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
+
 
 class User(db.Model):
     """
@@ -14,11 +15,14 @@ class User(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(256), nullable=False)
 
-    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    first_name: Mapped[str] = mapped_column(
+        String(100), nullable=True, default="")
+    last_name: Mapped[str] = mapped_column(
+        String(100), nullable=True, default="")
 
     # RELACIÓN 1 a MUCHOS con Favorite
     favorites: Mapped[list["Favorite"]] = relationship(
@@ -29,7 +33,7 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.id}: {self.email}>"
-    
+
     def serialize(self):
         return {
             "id": self.id,
@@ -37,6 +41,7 @@ class User(db.Model):
             "first_name": self.first_name,
             "last_name": self.last_name
         }
+
 
 class Character(db.Model):
     """
@@ -61,7 +66,7 @@ class Character(db.Model):
 
     def __repr__(self):
         return f"<Character {self.id}: {self.name}>"
-    
+
     def serialize(self):
         return {
             "id": self.id,
@@ -70,6 +75,7 @@ class Character(db.Model):
             "height": self.height,
             "mass": self.mass
         }
+
 
 class Planet(db.Model):
     """
@@ -94,7 +100,7 @@ class Planet(db.Model):
 
     def __repr__(self):
         return f"<Planet {self.id}: {self.name}>"
-    
+
     def serialize(self):
         return {
             "id": self.id,
@@ -103,6 +109,7 @@ class Planet(db.Model):
             "terrain": self.terrain,
             "population": self.population
         }
+
 
 class Vehicle(db.Model):
     """
@@ -127,7 +134,7 @@ class Vehicle(db.Model):
 
     def __repr__(self):
         return f"<Vehicle {self.id}: {self.name}>"
-    
+
     def serialize(self):
         return {
             "id": self.id,
@@ -136,6 +143,7 @@ class Vehicle(db.Model):
             "length": self.length,
             "model": self.model
         }
+
 
 class Favorite(db.Model):
     """
@@ -158,24 +166,24 @@ class Favorite(db.Model):
     )
 
     # FK opcionales (solo uno debe usarse)
-    planet_id: Mapped[int | None] = mapped_column(
+    planet_id: Mapped[int] = mapped_column(
         ForeignKey("planets.id"),
         nullable=True
     )
 
-    character_id: Mapped[int | None] = mapped_column(
+    character_id: Mapped[int] = mapped_column(
         ForeignKey("characters.id"),
         nullable=True
     )
 
-    vehicle_id: Mapped[int | None] = mapped_column(
+    vehicle_id: Mapped[int] = mapped_column(
         ForeignKey("vehicles.id"),
         nullable=True
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(),
-        default=datetime.utcnow
+        default=datetime.now(timezone.utc)
     )
 
     # RELACIONES
@@ -203,7 +211,7 @@ class Favorite(db.Model):
 
     def __repr__(self):
         return f"<Favorite {self.id}: User {self.user_id}>"
-    
+
     def serialize(self):
         return {
             "id": self.id,
